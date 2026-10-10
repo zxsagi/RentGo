@@ -44,8 +44,8 @@ function openMotorDetail(motorId){
           </div>
           <div class="section-title">Metode Pembayaran</div>
           <div class="payment-list" id="paymentList">
-            <div class="payment-opt active" data-pay="Transfer BCA"><i class="fa-solid fa-building-columns"></i><div class="info"><div class="name">Transfer BCA</div><div class="desc">1234567890 a/n RentGo — Dana ditahan sampai rental selesai</div></div></div>
-            <div class="payment-opt" data-pay="QRIS"><i class="fa-solid fa-qrcode"></i><div class="info"><div class="name">QRIS</div><div class="desc">Scan QR dari semua e-wallet — Dana ditahan sampai rental selesai</div></div></div>
+            <div class="payment-opt active" data-pay="Transfer bank (demo)"><i class="fa-solid fa-building-columns"></i><div class="info"><div class="name">Transfer bank (demo)</div><div class="desc">Belum terhubung ke bank/payment gateway. Jangan transfer uang melalui aplikasi ini.</div></div></div>
+            <div class="payment-opt" data-pay="QRIS (demo)"><i class="fa-solid fa-qrcode"></i><div class="info"><div class="name">QRIS (demo)</div><div class="desc">QRIS belum tersedia. Pembayaran hanya simulasi untuk pengujian aplikasi.</div></div></div>
           </div>
           <div class="price-summary">
             <div class="price-row"><span>Harga per jam</span><span id="sumPrice">${rupiah(m.pricePerHour)}</span></div>
