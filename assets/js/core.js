@@ -68,13 +68,13 @@ function loadState(){
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw){
     state.users = JSON.parse(JSON.stringify(SEED_USERS));
-    state.motors = JSON.parse(JSON.stringify(SEED_MOTORS));
+    state.motors = [];
     saveState(); return;
   }
   try {
     const d = JSON.parse(raw);
     state.users = d.users || JSON.parse(JSON.stringify(SEED_USERS));
-    state.motors = d.motors || JSON.parse(JSON.stringify(SEED_MOTORS));
+    state.motors = d.motors || [];
     state.rentals = d.rentals || [];
     state.reviews = d.reviews || [];
     state.chats = d.chats || [];
@@ -82,7 +82,7 @@ function loadState(){
     state.currentUser = d.currentUser || null;
   } catch(e){
     state.users = JSON.parse(JSON.stringify(SEED_USERS));
-    state.motors = JSON.parse(JSON.stringify(SEED_MOTORS));
+    state.motors = [];
     state.rentals = []; state.reviews = []; state.chats = []; state.notifications = [];
   }
 }

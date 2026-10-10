@@ -65,9 +65,8 @@
       helmCount: Number(row.helm_count) || 0, description: row.description || '',
       photo: row.photo || '', isOpen: row.is_open !== false, cloudSynced: true
     }));
-    const remoteIds = new Set(remoteMotors.map(m => m.id));
-    // Motor cloud menimpa versi lokal dengan ID sama; seed/demo lokal tetap tersedia.
-    state.motors = [...state.motors.filter(m => !remoteIds.has(String(m.id))), ...remoteMotors];
+    // Supabase adalah sumber utama: jangan gabungkan motor contoh/cache lokal.
+    state.motors = remoteMotors;
     saveState();
     if (typeof render === 'function' && state.currentUser) render();
     return true;
@@ -79,6 +78,12 @@
       return false;
     }
     await window.syncCloudMotors(true);
+    // Perubahan INSERT/UPDATE/DELETE dari perangkat lain langsung menyegarkan katalog.
+    if (window.rentGoMotorRealtime) window.rentGoSupabase.removeChannel(window.rentGoMotorRealtime);
+    window.rentGoMotorRealtime = window.rentGoSupabase
+      .channel('rentgo-motors-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'motors' }, () => window.syncCloudMotors(true))
+      .subscribe();
     return true;
   };
 })();

@@ -411,55 +411,6 @@ body { overflow-x: hidden; }
   .toast-container { left: 12px; right: 12px; top: 12px; }
   .toast { min-width: 0; width: 100%; }
 }
-
-/* RentGo: tombol lihat password */
-.rg-password-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.rg-password-wrap input {
-  width: 100%;
-  padding-right: 48px;
-  box-sizing: border-box;
-}
-
-.rg-password-toggle {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--muted, #64748b);
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.rg-password-toggle:hover {
-  background: var(--bg, #f1f5f9);
-}
-
-.rg-password-toggle:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-#authSubmit:disabled {
-  opacity: 0.65;
-  cursor: wait;
-}
-
-
 @media (max-width: 560px) {
   .motor-grid { grid-template-columns: minmax(0, 1fr); }
   .motor-img { height: 210px; }
