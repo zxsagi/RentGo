@@ -4,7 +4,7 @@
  * Hanya gunakan publishable/anon key di browser. JANGAN masukkan service_role/secret key.
  */
 window.RENTGO_SUPABASE_CONFIG = {
-  url: 'https://vgtsovqccctbgsogjjah.supabase.co',
-  anonKey: 'sb_publishable_GMyBsIRzCLj0FAth0VsVHw_rWuGX5KS',
+  url: 'https://lwamczocnemxynooaova.supabase.co',
+  anonKey: 'sb_publishable_gorlCBJGeBeUc3G_yj4a3g_oV1thS9X',
   bucket: 'motor-photos'
 };
