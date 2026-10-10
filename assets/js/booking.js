@@ -122,6 +122,7 @@ function openMotorDetail(motorId){
       };
       state.rentals.push(rental);
       saveState();
+      if (typeof saveRentalToCloud === 'function') saveRentalToCloud(rental);
       overlay.remove();
       openDemoPayment(rental.id);
 
@@ -151,13 +152,15 @@ function openDemoPayment(rentalId){
   document.body.appendChild(overlay);
   document.getElementById('cancelDemoPayment').onclick = () => {
     state.rentals = state.rentals.filter(r => r.id !== rentalId);
-    saveState(); overlay.remove(); render(); toast('Pesanan dibatalkan.', 'info');
+    saveState();
+    if (typeof deleteRentalFromCloud === 'function') deleteRentalFromCloud(rentalId); overlay.remove(); render(); toast('Pesanan dibatalkan.', 'info');
   };
   document.getElementById('confirmDemoPayment').onclick = () => {
     rental.paymentStatus = 'paid_demo';
     rental.status = 'booked';
     rental.paidAt = new Date().toISOString();
     saveState();
+    if (typeof saveRentalToCloud === 'function') saveRentalToCloud(rental);
     const buyer = state.users.find(u => u.id === rental.buyerId);
     pushNotif(rental.sellerId, 'booking', 'Booking Baru — Dibayar (Demo)', `${buyer?.name || 'Penyewa'} memesan ${motor?.name || 'motor'} selama ${rental.durationHours} jam. Status pembayaran: simulasi demo.`, rental.id);
     pushNotif(rental.buyerId, 'payment', 'Pembayaran Tercatat (Demo)', `Pembayaran ${rupiah(rental.totalPrice)} disimulasikan berhasil. Ini bukan transaksi uang sungguhan.`, rental.id);

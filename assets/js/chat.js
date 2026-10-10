@@ -1,6 +1,46 @@
 /* RentGo — chat lintas perangkat melalui Supabase */
 function chatCloud(){ return window.rentGoSupabase || null; }
 
+function playIncomingMessageSound(){
+  try { const C=window.AudioContext||window.webkitAudioContext; if(!C)return; const c=new C(); const o=c.createOscillator(),g=c.createGain(); o.type='sine'; o.frequency.setValueAtTime(880,c.currentTime); o.frequency.setValueAtTime(660,c.currentTime+0.12); g.gain.setValueAtTime(0.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(0.14,c.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.28); o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+0.3);o.onended=()=>c.close(); } catch(e){}
+}
+
+async function refreshUnreadChatBadge(playSound=false){
+  const sb=chatCloud(), u=state.currentUser; if(!sb||!u)return;
+  const {count,error}=await sb.from('chat_messages').select('id',{count:'exact',head:true}).eq('receiver_id',String(u.id)).eq('is_read',false);
+  if(error){console.warn('[RentGo chat] unread count',error.message);return;}
+  window._rentgoUnreadChats=count||0; if(typeof renderChatBadge==='function')renderChatBadge(window._rentgoUnreadChats);
+  if(playSound && window._rentgoLastUnreadCount!==undefined && window._rentgoUnreadChats>window._rentgoLastUnreadCount)playIncomingMessageSound();
+  window._rentgoLastUnreadCount=window._rentgoUnreadChats;
+}
+
+function startChatNotificationsRealtime(){
+  const sb=chatCloud(),u=state.currentUser;if(!sb||!u)return;
+  if(window._rentgoChatNotifyChannel)sb.removeChannel(window._rentgoChatNotifyChannel);
+  refreshUnreadChatBadge(false);
+  window._rentgoChatNotifyChannel=sb.channel('rentgo-chat-notifications-'+String(u.id))
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:'receiver_id=eq.'+String(u.id)},payload=>{
+      const row=payload.new||{}; if(String(row.sender_id)===String(u.id))return;
+      refreshUnreadChatBadge(true);
+      if(typeof pushNotif==='function')pushNotif(u.id,'chat','Pesan baru',`${row.sender_name||'Pengguna RentGo'}: ${String(row.message||'').slice(0,70)}`,row.rental_id||null);
+    }).subscribe();
+}
+
+function openProfileEditor(){
+  const u=state.currentUser;if(!u)return;const sb=chatCloud();
+  const overlay=document.createElement('div');overlay.className='modal-overlay';
+  overlay.innerHTML=`<div class="modal"><div class="modal-header"><h3>Profil Pengguna</h3><button class="modal-close"><i class="fa-solid fa-xmark"></i></button></div><form id="rgProfileForm"><div class="modal-body"><div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><div id="rgProfilePreview" class="user-avatar" style="width:76px;height:76px;font-size:24px;overflow:hidden">${u.avatarUrl?`<img src="${esc(u.avatarUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:esc(initials(u.name||'?'))}</div><label class="btn btn-secondary btn-sm" for="rgAvatarFile">Pilih foto profil</label><input id="rgAvatarFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif" style="max-width:180px"></div><div class="form-group"><label>Nama lengkap</label><input id="rgProfileName" required maxlength="80" value="${esc(u.name||'')}"></div><div class="form-group"><label>No. WhatsApp</label><input id="rgProfilePhone" maxlength="30" value="${esc(u.phone||'')}"></div><small>Foto JPG, PNG, WebP atau AVIF maksimal 5 MB.</small><div id="rgProfileMessage" role="status" style="margin-top:10px"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary modal-close-btn">Batal</button><button class="btn btn-primary" id="rgProfileSave">Simpan profil</button></div></form></div>`;
+  document.body.appendChild(overlay);const close=()=>overlay.remove();overlay.querySelectorAll('.modal-close,.modal-close-btn').forEach(b=>b.onclick=close);overlay.onclick=e=>{if(e.target===overlay)close();};
+  const file=overlay.querySelector('#rgAvatarFile');file.onchange=()=>{const f=file.files[0];if(!f)return;if(f.size>5*1024*1024){file.value='';toast('Foto maksimal 5 MB','warning');return;}overlay.querySelector('#rgProfilePreview').innerHTML=`<img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;};
+  overlay.querySelector('#rgProfileForm').onsubmit=async e=>{e.preventDefault();const btn=overlay.querySelector('#rgProfileSave'),msg=overlay.querySelector('#rgProfileMessage');btn.disabled=true;msg.textContent='Menyimpan...';
+    try{const name=overlay.querySelector('#rgProfileName').value.trim(),phone=overlay.querySelector('#rgProfilePhone').value.trim();if(!name)throw new Error('Nama wajib diisi.');let avatarUrl=u.avatarUrl||'';const f=file.files[0];
+      if(f){if(!sb)throw new Error('Supabase belum terhubung untuk menyimpan foto.');const ext=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');const path=String(u.id)+'/'+Date.now()+'.'+ext;const {error:upErr}=await sb.storage.from('user-avatars').upload(path,f,{upsert:true,contentType:f.type});if(upErr)throw upErr;const {data}=sb.storage.from('user-avatars').getPublicUrl(path);avatarUrl=data.publicUrl;}
+      if(sb){const {error}=await sb.from('profiles').upsert({id:String(u.id),full_name:name,phone,role:u.role,avatar_url:avatarUrl,updated_at:new Date().toISOString()},{onConflict:'id'});if(error)throw error;}
+      u.name=name;u.phone=phone;u.avatarUrl=avatarUrl;state.users=state.users.map(x=>String(x.id)===String(u.id)?{...x,...u}:x);saveState();close();render();toast('Profil berhasil diperbarui','success');
+    }catch(err){msg.textContent=err.message||'Gagal menyimpan profil';msg.style.color='#dc2626';}finally{btn.disabled=false;}};
+}
+
+
 function chatThreadId(rentalId, motorId, buyerId){
   if (rentalId) return 'rental:' + rentalId;
   return 'motor:' + motorId + ':buyer:' + buyerId;
@@ -107,6 +147,7 @@ async function openChatThread(info){
         const { error } = await sb.from('chat_messages').update({is_read:true})
           .in('id', unreadIds).eq('receiver_id', String(state.currentUser.id));
         if (error) console.warn('[RentGo chat] mark read', error.message);
+        else setTimeout(()=>refreshUnreadChatBadge(false),150);
       }
     } else {
       let changed = false;
@@ -159,6 +200,7 @@ async function openChatThread(info){
       .subscribe();
   }
   await renderMessages();
+  await refreshUnreadChatBadge(false);
   inputEl.focus();
 }
 
@@ -211,4 +253,6 @@ function ensureChatInboxButton(){
   b.style.cssText = 'position:fixed;right:22px;bottom:22px;z-index:900;background:#2563eb;color:#fff;border:0;border-radius:999px;padding:12px 18px;font:600 14px inherit;box-shadow:0 8px 24px #0002;cursor:pointer';
   b.onclick = openChatInbox;
   document.body.appendChild(b);
+  renderChatBadge(window._rentgoUnreadChats||0);
+  startChatNotificationsRealtime();
 }

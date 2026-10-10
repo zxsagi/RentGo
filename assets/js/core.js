@@ -126,6 +126,7 @@ function pushNotif(userId, type, title, message, rentalId=null){
   const n = { id: uid('n'), userId, type, title, message, rentalId, read: false, createdAt: new Date().toISOString() };
   state.notifications.push(n);
   saveState();
+  if (typeof saveNotificationToCloud === 'function') saveNotificationToCloud(n);
   if (state.currentUser && state.currentUser.id === userId){
     renderNotifBell();
     toast(title, type === 'danger' ? 'error' : type === 'warning' ? 'warning' : 'info');

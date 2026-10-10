@@ -28,13 +28,15 @@ function toggleNotifDropdown(){
   dd.querySelector('#markAllRead').onclick = (e) => {
     e.stopPropagation();
     state.notifications.filter(n => n.userId === state.currentUser.id).forEach(n => n.read = true);
-    saveState(); renderNotifBell(); dd.remove();
+    saveState();
+    if (typeof saveNotificationToCloud === 'function') state.notifications.filter(n => String(n.userId) === String(state.currentUser.id)).forEach(n => saveNotificationToCloud(n));
+    renderNotifBell(); dd.remove();
   };
   dd.querySelectorAll('[data-notif]').forEach(el => {
     el.onclick = (e) => {
       e.stopPropagation();
       const n = state.notifications.find(x => x.id === el.dataset.notif);
-      if (n){ n.read = true; saveState(); renderNotifBell(); }
+      if (n){ n.read = true; saveState(); if (typeof saveNotificationToCloud === 'function') saveNotificationToCloud(n); renderNotifBell(); }
       dd.remove();
       if (n && n.rentalId && n.type === 'chat'){ openChat(n.rentalId); }
       else if (n && n.rentalId){ render(); }

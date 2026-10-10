@@ -22,7 +22,7 @@ function renderHeader(activeTab, tabs){
               <div class="name">${esc(u.name)}</div>
               <div class="role">${u.role === 'buyer' ? 'Penyewa' : 'Penyedia'}</div>
             </div>
-            <div class="user-avatar">${initials(u.name)}</div>
+            <div class="user-avatar" title="Profil saya">${u.avatarUrl ? `<img src="${esc(u.avatarUrl)}" alt="Foto profil" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : initials(u.name)}</div>
           </div>
           <button class="icon-btn" id="logoutBtn" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
@@ -42,4 +42,14 @@ function renderNotifBell(){
     b.textContent = unread > 9 ? '9+' : unread;
     btn.appendChild(b);
   }
+}
+
+
+function renderChatBadge(count){
+  const b=document.getElementById('rentgoChatInboxButton');
+  if(!b) return;
+  let badge=b.querySelector('.rg-chat-badge');
+  if(!count){ if(badge) badge.remove(); return; }
+  if(!badge){ badge=document.createElement('span'); badge.className='rg-chat-badge'; b.appendChild(badge); }
+  badge.textContent=String(count);
 }

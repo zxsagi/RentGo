@@ -25,11 +25,11 @@ function renderAuth(){
   document.getElementById('switchBtn').onclick=()=>{mode=mode==='login'?'register':'login';const reg=document.getElementById('registerFields');reg.classList.toggle('hidden',mode!=='register');document.getElementById('authTitle').textContent=mode==='register'?'Daftar Akun Baru':'Masuk ke RentGo';document.getElementById('authSub').textContent=mode==='register'?'Buat akun untuk mulai menggunakan RentGo':'Silakan login untuk melanjutkan';document.getElementById('authSubmit').textContent=mode==='register'?'Daftar':'Masuk';document.getElementById('switchText').textContent=mode==='register'?'Sudah punya akun?':'Belum punya akun?';document.getElementById('switchBtn').textContent=mode==='register'?'Masuk di sini':'Daftar sekarang';document.getElementById('authPassword').autocomplete=mode==='register'?'new-password':'current-password';message('');};
   async function getProfile(user, fallback={}){
     let profile=null;
-    const {data,error}=await supabaseClient.from('profiles').select('id, full_name, phone, role').eq('id',user.id).maybeSingle();
+    const {data,error}=await supabaseClient.from('profiles').select('id, full_name, phone, role, avatar_url').eq('id',user.id).maybeSingle();
     if(!error && data) profile=data;
     else if(error) console.warn('[RentGo auth] profil tidak bisa dibaca:',error.message);
     const meta=user.user_metadata||{};
-    return {id:user.id,name:profile?.full_name||meta.full_name||meta.name||fallback.name||user.email?.split('@')[0]||'Pengguna',email:user.email,role:profile?.role||meta.role||fallback.role||'buyer',phone:profile?.phone||meta.phone||fallback.phone||'',balance:0};
+    return {id:user.id,name:profile?.full_name||meta.full_name||meta.name||fallback.name||user.email?.split('@')[0]||'Pengguna',email:user.email,role:profile?.role||meta.role||fallback.role||'buyer',phone:profile?.phone||meta.phone||fallback.phone||'',avatarUrl:profile?.avatar_url||meta.avatar_url||fallback.avatarUrl||'',balance:0};
   }
   document.getElementById('authSubmit').onclick=async()=>{
     const btn=document.getElementById('authSubmit');const email=document.getElementById('authEmail').value.trim().toLowerCase();const password=document.getElementById('authPassword').value;

@@ -9,6 +9,7 @@ function confirmPickup(rentalId){
   r.startTime = new Date().toISOString();
   r.pickupConfirmedAt = new Date().toISOString();
   saveState();
+  if (typeof saveRentalToCloud === 'function') saveRentalToCloud(r);
   const motor = state.motors.find(m => m.id === r.motorId);
   const buyer = state.users.find(u => u.id === r.buyerId);
   pushNotif(r.buyerId, 'booking', 'Motor Diambil', `Timer untuk ${motor?.name||'motor'} telah dimulai.`, r.id);
@@ -30,6 +31,7 @@ function confirmReturn(rentalId){
   const seller = state.users.find(u => u.id === r.sellerId);
   if (seller){ seller.balance = (seller.balance || 0) + r.sellerPayout; }
   saveState();
+  if (typeof saveRentalToCloud === 'function') saveRentalToCloud(r);
   const motor = state.motors.find(m => m.id === r.motorId);
   // Notif ke BUYER — TANPA info komisi
   pushNotif(r.buyerId, 'payment', 'Rental Selesai', `Terima kasih! Rental ${motor?.name||'motor'} selesai. Jangan lupa beri rating.`, r.id);

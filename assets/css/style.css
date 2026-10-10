@@ -457,3 +457,9 @@ body { overflow-x: hidden; }
 .rg-password-toggle:hover{background:var(--bg,#f1f5f9)}
 .rg-password-toggle:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
 #authSubmit:disabled{opacity:.65;cursor:wait}
+
+/* Chat unread count and profile photo */
+#rentgoChatInboxButton{position:relative}
+.rg-chat-badge{position:absolute;top:-7px;right:-5px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#e11d48;color:#fff;font:700 12px/22px Arial,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff}
+.user-avatar{overflow:hidden}
+.user-avatar img{display:block}

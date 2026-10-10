@@ -26,9 +26,7 @@ function attachHeaderHandlers(tabs){
     e.stopPropagation();
     toggleNotifDropdown();
   };
-  document.getElementById('userMenu').onclick = () => {
-    toast('Fitur profil segera hadir', 'info');
-  };
+  document.getElementById('userMenu').onclick = () => { if (typeof openProfileEditor === 'function') openProfileEditor(); };
   startTimers();
   attachActionButtons();
   attachChatButtons();
