@@ -1,18 +1,18 @@
 /* RentGo — app */
+/* ============================================================
+   RENDER
+   ============================================================ */
 function render(){
+  const oldChatInboxButton = document.getElementById('rentgoChatInboxButton');
+  if (!state.currentUser && oldChatInboxButton) oldChatInboxButton.remove();
   if (!state.currentUser) renderAuth();
   else if (state.currentUser.role === 'buyer') renderBuyer();
   else renderSeller();
   startTimers();
+  if (typeof ensureChatInboxButton === 'function') ensureChatInboxButton();
 }
 
 loadState();
-if (window.rentGoCloudEnabled && typeof initRentGoCloud === 'function') {
-  // Jangan tampilkan sesi demo lokal sebagai sesi online. Tunggu pemulihan sesi Supabase.
-  state.currentUser = null;
-  renderAuth();
-  initRentGoCloud().catch(e => console.error('[RentGo] bootstrap', e));
-} else {
-  render();
-  console.warn('[RentGo] Mode lokal/demo aktif. Isi assets/js/supabase-config.js untuk fitur online.');
-}
+render();
+// Tarik daftar motor dari Supabase setelah UI awal tampil.
+if (typeof initRentGoCloud === 'function') initRentGoCloud();

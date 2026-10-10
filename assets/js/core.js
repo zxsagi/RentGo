@@ -63,10 +63,6 @@ function saveState(){
     reviews: state.reviews, chats: state.chats, notifications: state.notifications,
     currentUser: state.currentUser
   }));
-  // Browser cache tetap membantu UX, tetapi cloud adalah sumber data bersama saat login Supabase.
-  if (window.rentGoCloudEnabled && state.currentUser && typeof window.persistRentGoRecords === 'function') {
-    window.persistRentGoRecords().catch(e => console.error('[RentGo cloud] persist', e));
-  }
 }
 function loadState(){
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -127,7 +123,7 @@ function toast(msg, type='info'){
 
 /* ---------- NOTIFICATIONS ---------- */
 function pushNotif(userId, type, title, message, rentalId=null){
-  const n = { id: uid('n'), userId, createdBy: state.currentUser?.id || null, type, title, message, rentalId, read: false, createdAt: new Date().toISOString() };
+  const n = { id: uid('n'), userId, type, title, message, rentalId, read: false, createdAt: new Date().toISOString() };
   state.notifications.push(n);
   saveState();
   if (state.currentUser && state.currentUser.id === userId){

@@ -44,8 +44,8 @@ function openMotorDetail(motorId){
           </div>
           <div class="section-title">Metode Pembayaran</div>
           <div class="payment-list" id="paymentList">
-            <div class="payment-opt active" data-pay="Transfer bank (demo)"><i class="fa-solid fa-building-columns"></i><div class="info"><div class="name">Transfer bank (demo)</div><div class="desc">Belum terhubung ke bank/payment gateway. Jangan transfer uang melalui aplikasi ini.</div></div></div>
-            <div class="payment-opt" data-pay="QRIS (demo)"><i class="fa-solid fa-qrcode"></i><div class="info"><div class="name">QRIS (demo)</div><div class="desc">QRIS belum tersedia. Pembayaran hanya simulasi untuk pengujian aplikasi.</div></div></div>
+            <div class="payment-opt active" data-pay="Transfer BCA"><i class="fa-solid fa-building-columns"></i><div class="info"><div class="name">Transfer BCA</div><div class="desc">1234567890 a/n RentGo — Dana ditahan sampai rental selesai</div></div></div>
+            <div class="payment-opt" data-pay="QRIS"><i class="fa-solid fa-qrcode"></i><div class="info"><div class="name">QRIS</div><div class="desc">Scan QR dari semua e-wallet — Dana ditahan sampai rental selesai</div></div></div>
           </div>
           <div class="price-summary">
             <div class="price-row"><span>Harga per jam</span><span id="sumPrice">${rupiah(m.pricePerHour)}</span></div>
@@ -82,7 +82,7 @@ function openMotorDetail(motorId){
           </div>
         ` : ''}
       </div>
-      ${!rented ? `<div class="modal-footer"><button class="btn btn-secondary modal-close-btn">Batal</button><button class="btn btn-primary" id="bookBtn"><i class="fa-solid fa-check"></i> Booking Sekarang</button></div>` : ''}
+      <div class="modal-footer"><button class="btn btn-secondary" id="chatSellerFromDetail"><i class="fa-solid fa-comments"></i> Chat Penyedia</button>${!rented ? `<button class="btn btn-secondary modal-close-btn">Batal</button><button class="btn btn-primary" id="bookBtn"><i class="fa-solid fa-check"></i> Booking Sekarang</button>` : `<button class="btn btn-secondary modal-close-btn">Tutup</button>`}</div>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -107,7 +107,9 @@ function openMotorDetail(motorId){
       opt.classList.add('active'); selectedPayment = opt.dataset.pay;
     };
   });
-  const bookBtn = document.getElementById('bookBtn');
+  const chatSellerBtn = overlay.querySelector('#chatSellerFromDetail');
+  if (chatSellerBtn) chatSellerBtn.onclick = () => openMotorChat(m.id);
+  const bookBtn = overlay.querySelector('#bookBtn');
   if (bookBtn){
     bookBtn.onclick = () => {
       const total = selectedDuration * m.pricePerHour;

@@ -16,12 +16,11 @@ function attachHeaderHandlers(tabs){
     else state.sellerTab = 'dashboard';
     render();
   };
-  document.getElementById('logoutBtn').onclick = async () => {
+  document.getElementById('logoutBtn').onclick = () => {
+    state.currentUser = null;
     state.buyerTab = 'browse'; state.sellerTab = 'dashboard';
     state.filterStatus = 'all'; state.searchQuery = '';
-    if (window.rentGoCloudEnabled && window.rentGoSignOut) await window.rentGoSignOut();
-    else { state.currentUser = null; saveState(); render(); }
-    toast('Kamu telah keluar', 'info');
+    saveState(); render(); toast('Kamu telah keluar', 'info');
   };
   document.getElementById('notifBtn').onclick = (e) => {
     e.stopPropagation();
