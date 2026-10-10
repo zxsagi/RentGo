@@ -449,3 +449,11 @@ body { overflow-x: hidden; }
   .header-nav .nav-btn { flex: 0 0 auto; white-space: nowrap; padding: 8px 11px; font-size: 12px; }
   .header-inner { row-gap: 5px; }
 }
+
+/* Password visibility control on authentication screen */
+.rg-password-wrap{position:relative;display:flex;align-items:center;width:100%}
+.rg-password-wrap input{width:100%;padding-right:48px;box-sizing:border-box}
+.rg-password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted,#64748b);cursor:pointer;font-size:16px}
+.rg-password-toggle:hover{background:var(--bg,#f1f5f9)}
+.rg-password-toggle:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
+#authSubmit:disabled{opacity:.65;cursor:wait}
