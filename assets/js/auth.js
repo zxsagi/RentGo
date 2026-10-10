@@ -35,7 +35,7 @@ function renderAuth(){
           <button class="btn btn-primary btn-block" id="authSubmit">Masuk</button>
           <div class="auth-switch"><span id="switchText">Belum punya akun?</span> <a id="switchBtn">Daftar sekarang</a></div>
           <div style="margin-top:20px;padding:12px;background:var(--bg);border-radius:10px;font-size:12px;color:var(--muted)">
-            <strong>Akun RentGo</strong><br>Daftar dengan email aktif. Untuk mode online, pastikan Supabase sudah dikonfigurasi. Jika konfirmasi email aktif, buka email untuk memverifikasi akun sebelum masuk.
+            <strong>Akun RentGo</strong><br>Daftar dengan email dan password seperti biasa. Verifikasi email dinonaktifkan melalui pengaturan Supabase agar akun bisa langsung digunakan.
           </div>
         </div>
       </div>
@@ -104,8 +104,7 @@ function renderAuth(){
             await window.rentGoFinishLogin(data.user);
             toast('Akun berhasil dibuat!', 'success');
           } else {
-            toast('Pendaftaran berhasil. Periksa email untuk verifikasi, lalu masuk.', 'success');
-            switchBtn.click();
+            throw new Error('Akun berhasil dibuat, tetapi Supabase masih meminta verifikasi email. Buka Supabase → Authentication → Sign In / Providers → Email, lalu nonaktifkan Confirm email. Setelah itu coba daftar lagi.');
           }
         }
       } else {
