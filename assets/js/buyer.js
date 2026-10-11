@@ -147,5 +147,6 @@ function renderBuyerHistory(){
 }
 
 function isMotorRented(motorId){
-  return state.rentals.some(r => r.motorId === motorId && (r.status === 'active' || r.status === 'booked' || r.status === 'pending_payment'));
+  // Booking yang belum dibayar tidak mengunci motor. Hanya booking yang sudah dibayar (booked) atau sedang dipakai (active) yang dianggap tidak tersedia.
+  return state.rentals.some(r => r.motorId === motorId && (r.status === 'active' || r.status === 'booked'));
 }

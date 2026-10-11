@@ -1,0 +1,32 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+const json = (body: unknown, status=200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
+Deno.serve(async req => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  const url = Deno.env.get('SUPABASE_URL')!, anon = Deno.env.get('SUPABASE_ANON_KEY')!, service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const auth = req.headers.get('Authorization'); if (!auth) return json({ error: 'Authentication required' }, 401);
+  const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
+  const { data: { user }, error: authError } = await userClient.auth.getUser();
+  if (authError || !user) return json({ error: 'Invalid session' }, 401);
+  const { rental_id } = await req.json().catch(() => ({})); if (!rental_id) return json({ error: 'rental_id required' }, 400);
+  const admin = createClient(url, service);
+  const { data: rental, error } = await admin.from('rentals').select('id,buyer_id,seller_id,status,rental_data').eq('id', String(rental_id)).maybeSingle();
+  if (error || !rental) return json({ error: 'Rental not found' }, 404);
+  if (String(rental.buyer_id) !== user.id) return json({ error: 'Only the renter can pay this rental' }, 403);
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(rental.seller_id))) return json({ error: 'Seller account must be migrated to Supabase Auth before accepting payments' }, 422);
+  if (rental.status !== 'pending_payment') return json({ error: 'Rental is not awaiting payment' }, 409);
+  const amount = Number(rental.rental_data?.totalPrice);
+  if (!Number.isSafeInteger(amount) || amount < 1 || !rental.seller_id) return json({ error: 'Rental amount or seller is invalid' }, 422);
+  const serverKey = Deno.env.get('MIDTRANS_SERVER_KEY'); if (!serverKey) return json({ error: 'Payment gateway is not configured. Set MIDTRANS_SERVER_KEY as an Edge Function secret.' }, 503);
+  const env = (Deno.env.get('MIDTRANS_ENV') || 'sandbox').toLowerCase();
+  const base = env === 'production' ? 'https://app.midtrans.com' : 'https://app.sandbox.midtrans.com';
+  const orderId = `RG-${rental.id}-${crypto.randomUUID().slice(0,8)}`.slice(0,50);
+  const { error: insertError } = await admin.from('rentgo_payments').insert({ order_id: orderId, rental_id: String(rental.id), buyer_id: user.id, seller_id: rental.seller_id, amount, status: 'created' });
+  if (insertError) return json({ error: 'Could not initialize payment', details: insertError.message }, 500);
+  const response = await fetch(`${base}/snap/v1/transactions`, { method: 'POST', headers: { 'Accept':'application/json', 'Content-Type':'application/json', 'Authorization':`Basic ${btoa(`${serverKey}:`)}` }, body: JSON.stringify({ transaction_details: { order_id: orderId, gross_amount: amount }, item_details: [{ id: String(rental.rental_data?.motorId || rental.id).slice(0,50), price: amount, quantity: 1, name: String(rental.rental_data?.motorName || 'Sewa motor RentGo').slice(0,50) }], customer_details: { first_name: String(user.user_metadata?.full_name || user.email || 'Penyewa').slice(0,50), email: user.email } }) });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.token) { await admin.from('rentgo_payments').update({ status: 'failed', notification_payload: { http_status: response.status } }).eq('order_id', orderId); return json({ error: 'Midtrans could not create payment', details: result }, 502); }
+  await admin.from('rentgo_payments').update({ status: 'pending', snap_token: result.token, snap_redirect_url: result.redirect_url }).eq('order_id', orderId);
+  return json({ order_id: orderId, token: result.token, redirect_url: result.redirect_url, amount, environment: env, client_key: Deno.env.get('MIDTRANS_CLIENT_KEY') || null });
+});

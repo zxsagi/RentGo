@@ -241,40 +241,62 @@ async function openChatThread(info){
 async function openChatInbox(){
   if (!state.currentUser) return;
   const sb = chatCloud();
-  if (!sb) {
-    toast('Chat lintas perangkat belum aktif. Isi URL dan publishable key Supabase terlebih dahulu.', 'warning');
-    return;
-  }
+  if (!sb) { toast('Chat lintas perangkat belum aktif. Periksa konfigurasi Supabase.', 'warning'); return; }
+  const uid = String(state.currentUser.id);
   const { data, error } = await sb.from('chat_messages').select('*')
-    .or(`sender_id.eq.${String(state.currentUser.id)},receiver_id.eq.${String(state.currentUser.id)}`)
-    .order('created_at', { ascending: false }).limit(300);
-  if (error) { toast('Gagal mengambil pesan masuk: ' + error.message, 'error'); console.error(error); return; }
+    .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
+    .order('created_at', { ascending: false }).limit(500);
+  if (error) { toast('Gagal mengambil pesan masuk: ' + error.message, 'error'); return; }
+  // Hidden threads are scoped to the authenticated Supabase user; deleting here never deletes the other party's messages.
+  let hidden = [];
+  const { data: hiddenRows, error: hiddenErr } = await sb.from('chat_thread_hidden').select('thread_id').eq('user_id', uid);
+  if (hiddenErr && hiddenErr.code !== '42P01') console.warn('[RentGo inbox] hidden threads:', hiddenErr.message);
+  hidden = (hiddenRows || []).map(x => x.thread_id);
   const threads = new Map();
-  (data || []).forEach(m => {
-    if (!threads.has(m.thread_id)) threads.set(m.thread_id, m);
-  });
+  (data || []).forEach(m => { if (!hidden.includes(m.thread_id) && !threads.has(m.thread_id)) threads.set(m.thread_id, m); });
   const rows = [...threads.values()];
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `<div class="modal"><div class="modal-header"><h3><i class="fa-solid fa-comments"></i> Pesan Masuk</h3><button class="modal-close"><i class="fa-solid fa-xmark"></i></button></div>
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal"><div class="modal-header"><h3><i class="fa-solid fa-comments"></i> Pesan Masuk</h3><button class="modal-close" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>
   <div class="modal-body" id="chatInboxRows">${rows.length ? rows.map(m => {
-    const isSender = String(m.sender_id) === String(state.currentUser.id);
+    const isSender = String(m.sender_id) === uid;
     const otherName = isSender ? (m.receiver_name || 'Pengguna RentGo') : (m.sender_name || 'Pengguna RentGo');
-    const unread = (data || []).filter(x => x.thread_id === m.thread_id && String(x.receiver_id) === String(state.currentUser.id) && !x.is_read).length;
-    return `<button class="btn btn-secondary" style="display:flex;width:100%;justify-content:space-between;align-items:center;margin-bottom:8px;text-align:left" data-thread="${esc(m.thread_id)}" data-other="${esc(isSender?m.receiver_id:m.sender_id)}" data-name="${esc(otherName)}" data-motor="${esc(m.motor_id||'')}" data-motor-name="${esc(m.motor_name||'Motor')}">
-      <span><strong>${esc(otherName)}</strong><br><small>${esc(m.motor_name || 'Percakapan RentGo')} · ${esc(m.message.slice(0,75))}</small></span>
-      ${unread ? `<span class="status-badge available">${unread} baru</span>` : ''}
-    </button>`;
-  }).join('') : '<div class="empty"><i class="fa-regular fa-comment-dots"></i><h3>Belum ada pesan</h3><p>Pesan dari penyewa akan muncul di sini.</p></div>'}</div>
+    const unread = (data || []).filter(x => x.thread_id === m.thread_id && String(x.receiver_id) === uid && !x.is_read).length;
+    return `<div class="rg-inbox-row" style="display:flex;gap:8px;align-items:stretch;margin-bottom:9px"><button class="btn btn-secondary" style="display:flex;flex:1;min-width:0;justify-content:space-between;align-items:center;text-align:left;gap:12px" data-thread="${esc(m.thread_id)}" data-other="${esc(isSender?m.receiver_id:m.sender_id)}" data-name="${esc(otherName)}" data-motor="${esc(m.motor_id||'')}" data-motor-name="${esc(m.motor_name||'Motor')}"><span style="min-width:0;overflow-wrap:anywhere"><strong>${esc(otherName)}</strong><br><small>${esc(m.motor_name || 'Percakapan RentGo')} · ${esc(String(m.message||'').slice(0,75))}</small></span>${unread ? `<span class="status-badge available">${unread} baru</span>` : ''}</button><button type="button" class="btn btn-secondary" title="Hapus percakapan dari daftar saya" aria-label="Hapus percakapan" data-hide-thread="${esc(m.thread_id)}" style="flex:0 0 auto;color:#dc2626"><i class="fa-solid fa-trash-can"></i></button></div>`;
+  }).join('') : '<div class="empty"><i class="fa-regular fa-comment-dots"></i><h3>Belum ada pesan</h3><p>Percakapan baru akan muncul di sini.</p></div>'}</div>
   <div class="modal-footer"><button class="btn btn-secondary modal-close-btn">Tutup</button></div></div>`;
   document.body.appendChild(overlay);
   const close = () => overlay.remove();
   overlay.querySelectorAll('.modal-close,.modal-close-btn').forEach(b => b.onclick = close);
   overlay.onclick = e => { if (e.target === overlay) close(); };
   overlay.querySelectorAll('[data-thread]').forEach(btn => btn.onclick = () => {
-    const info = { threadId: btn.dataset.thread, rentalId: null, motorId: btn.dataset.motor,
-      motorName: btn.dataset.motorName, otherId: btn.dataset.other, otherName: btn.dataset.name };
+    const info = { threadId: btn.dataset.thread, rentalId: null, motorId: btn.dataset.motor, motorName: btn.dataset.motorName, otherId: btn.dataset.other, otherName: btn.dataset.name };
     close(); openChatThread(info);
+  });
+  overlay.querySelectorAll('[data-hide-thread]').forEach(btn => btn.onclick = async () => {
+    const threadId = btn.dataset.hideThread;
+    const confirmed = await showRentGoConfirm('Hapus percakapan?', 'Percakapan akan disembunyikan dari daftar Pesan Masuk akun kamu. Pesan lawan bicara tidak dihapus.', 'Hapus percakapan');
+    if (!confirmed) return;
+    btn.disabled = true;
+    const { error: hideError } = await sb.from('chat_thread_hidden').upsert({ user_id: uid, thread_id: threadId }, { onConflict: 'user_id,thread_id' });
+    if (hideError) {
+      btn.disabled = false;
+      if (hideError.code === '42P01') toast('Jalankan SQL migration RentGo terbaru terlebih dahulu.', 'error');
+      else toast('Percakapan gagal dihapus: ' + hideError.message, 'error');
+      return;
+    }
+    const row = btn.closest('.rg-inbox-row'); row?.remove();
+    if (!overlay.querySelector('.rg-inbox-row')) overlay.querySelector('#chatInboxRows').innerHTML = '<div class="empty"><i class="fa-regular fa-comment-dots"></i><h3>Belum ada pesan</h3><p>Percakapan baru akan muncul di sini.</p></div>';
+    toast('Percakapan dihapus dari daftar kamu.', 'success');
+  });
+}
+
+function showRentGoConfirm(title, description, confirmLabel='Konfirmasi') {
+  return new Promise(resolve => {
+    const el = document.createElement('div'); el.className = 'modal-overlay'; el.style.zIndex = '1200';
+    el.innerHTML = `<div class="modal" style="max-width:440px"><div class="modal-header"><h3><i class="fa-solid fa-circle-exclamation" style="color:#dc2626;margin-right:8px"></i>${esc(title)}</h3><button class="modal-close" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div><div class="modal-body"><p>${esc(description)}</p></div><div class="modal-footer"><button class="btn btn-secondary" data-cancel>Batal</button><button class="btn btn-primary" data-confirm style="background:#dc2626;border-color:#dc2626">${esc(confirmLabel)}</button></div></div>`;
+    document.body.appendChild(el); let done=false;
+    const finish = v => { if(done)return; done=true; el.remove(); resolve(v); };
+    el.querySelector('.modal-close').onclick=()=>finish(false); el.querySelector('[data-cancel]').onclick=()=>finish(false); el.querySelector('[data-confirm]').onclick=()=>finish(true); el.onclick=e=>{if(e.target===el)finish(false);};
   });
 }
 

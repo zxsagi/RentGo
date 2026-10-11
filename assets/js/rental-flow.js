@@ -24,19 +24,30 @@ function confirmReturn(rentalId){
   if (!confirm('Konfirmasi motor telah dikembalikan dengan baik?')) return;
   r.status = 'completed';
   r.completedAt = new Date().toISOString();
-  // Hitung komisi dan payout (HANYA untuk seller, tidak ditampilkan ke buyer)
-  r.commission = Math.round(r.totalPrice * COMMISSION_RATE);
-  r.sellerPayout = r.totalPrice - r.commission;
-  // Transfer dari escrow ke saldo seller
-  const seller = state.users.find(u => u.id === r.sellerId);
-  if (seller){ seller.balance = (seller.balance || 0) + r.sellerPayout; }
+  // Pembayaran Midtrans masuk ke alur saldo/escrow; pembayaran cash diterima langsung oleh penyedia.
+  const isCash = String(r.paymentMethod || '').toLowerCase() === 'cash';
+  if (isCash) {
+    r.commission = 0;
+    r.sellerPayout = 0;
+    r.paymentStatus = 'cash_paid_confirmed';
+  } else {
+    r.commission = Math.round(r.totalPrice * COMMISSION_RATE);
+    r.sellerPayout = r.totalPrice - r.commission;
+    const seller = state.users.find(u => u.id === r.sellerId);
+    if (seller){ seller.balance = (seller.balance || 0) + r.sellerPayout; }
+  }
   saveState();
   if (typeof saveRentalToCloud === 'function') saveRentalToCloud(r);
   const motor = state.motors.find(m => m.id === r.motorId);
   // Notif ke BUYER — TANPA info komisi
   pushNotif(r.buyerId, 'payment', 'Rental Selesai', `Terima kasih! Rental ${motor?.name||'motor'} selesai. Jangan lupa beri rating.`, r.id);
   // Notif ke SELLER — DENGAN info komisi & payout
-  pushNotif(r.sellerId, 'payment', 'Pembayaran Diterima', `${rupiah(r.sellerPayout)} masuk ke saldo kamu (komisi platform: ${rupiah(r.commission)}).`, r.id);
-  toast('Rental selesai. Pembayaran diteruskan ke penyedia.', 'success');
+  if (isCash) {
+    pushNotif(r.sellerId, 'payment', 'Rental Tunai Selesai', 'Rental selesai. Pembayaran tunai dilakukan langsung kepada penyedia.', r.id);
+    pushNotif(r.buyerId, 'payment', 'Rental Tunai Selesai', 'Rental selesai. Terima kasih telah menggunakan RentGo.', r.id);
+  } else {
+    pushNotif(r.sellerId, 'payment', 'Pembayaran Diterima', `${rupiah(r.sellerPayout)} masuk ke saldo kamu (komisi platform: ${rupiah(r.commission)}).`, r.id);
+  }
+  toast('Rental selesai.', 'success');
   render();
 }

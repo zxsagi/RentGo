@@ -9,7 +9,7 @@ function openMotorDetail(motorId){
   const rented = isMotorRented(m.id);
   const stats = getMotorRating(m.id);
   const reviews = state.reviews.filter(rv => rv.motorId === m.id).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-  let selectedDuration = 1, selectedPayment = 'Transfer BCA';
+  let selectedDuration = 1, selectedPayment = 'Midtrans';
 
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -44,8 +44,8 @@ function openMotorDetail(motorId){
           </div>
           <div class="section-title">Metode Pembayaran</div>
           <div class="payment-list" id="paymentList">
-            <div class="payment-opt active" data-pay="Transfer BCA"><i class="fa-solid fa-building-columns"></i><div class="info"><div class="name">Transfer BCA</div><div class="desc">1234567890 a/n RentGo — Dana ditahan sampai rental selesai</div></div></div>
-            <div class="payment-opt" data-pay="QRIS"><i class="fa-solid fa-qrcode"></i><div class="info"><div class="name">QRIS</div><div class="desc">Scan QR dari semua e-wallet — Dana ditahan sampai rental selesai</div></div></div>
+            <div class="payment-opt active" data-pay="Midtrans"><i class="fa-solid fa-shield-halved"></i><div class="info"><div class="name">Bayar Online — Midtrans</div><div class="desc">Kartu, transfer bank, QRIS, dan metode yang tersedia di checkout Midtrans. Pembayaran tampil di website RentGo.</div></div></div>
+            <div class="payment-opt" data-pay="Cash"><i class="fa-solid fa-money-bill-wave"></i><div class="info"><div class="name">Bayar Tunai (Cash)</div><div class="desc">Bayar langsung kepada penyedia saat mengambil motor. Status pembayaran tetap belum lunas sampai dikonfirmasi.</div></div></div>
           </div>
           <div class="price-summary">
             <div class="price-row"><span>Harga per jam</span><span id="sumPrice">${rupiah(m.pricePerHour)}</span></div>
@@ -120,51 +120,104 @@ function openMotorDetail(motorId){
         totalPrice: total, status: 'pending_payment', createdAt: new Date().toISOString(),
         paymentStatus: 'pending'
       };
+      if (selectedPayment === 'Cash') {
+        rental.status = 'booked';
+        rental.paymentStatus = 'cash_due';
+        rental.cashPaymentDue = true;
+      }
       state.rentals.push(rental);
       saveState();
       if (typeof saveRentalToCloud === 'function') saveRentalToCloud(rental);
       overlay.remove();
-      openDemoPayment(rental.id);
+      if (selectedPayment === 'Cash') {
+        const motorName = m.name || 'motor';
+        pushNotif(rental.sellerId, 'booking', 'Booking Tunai Baru', `${state.currentUser.name} memesan ${motorName} dengan pembayaran tunai. Konfirmasi saat motor diambil.`, rental.id);
+        pushNotif(rental.buyerId, 'booking', 'Booking Berhasil', `Pesanan ${motorName} dibuat. Siapkan pembayaran tunai ${rupiah(total)} saat mengambil motor.`, rental.id);
+        toast('Booking tunai berhasil dibuat. Pembayaran dilakukan saat mengambil motor.', 'success');
+        render();
+      } else {
+        openDemoPayment(rental.id);
+      }
 
     };
   }
 }
 
 
-/* Checkout demo: konfirmasi di sini hanya simulasi, bukan transaksi uang sungguhan. */
+/* Memuat Snap JS di halaman RentGo agar checkout tidak berpindah ke tab lain. */
+function loadMidtransSnap(src, clientKey){
+  return new Promise((resolve,reject)=>{
+    if(window.snap && typeof window.snap.pay === 'function'){ resolve(); return; }
+    const existing=document.querySelector('script[data-rentgo-midtrans-snap]');
+    if(existing){ existing.addEventListener('load',()=>resolve(),{once:true}); existing.addEventListener('error',()=>reject(new Error('Gagal memuat checkout Midtrans.')),{once:true}); return; }
+    const script=document.createElement('script'); script.src=src; script.dataset.rentgoMidtransSnap='true'; script.setAttribute('data-client-key',clientKey);
+    script.onload=()=>window.snap && typeof window.snap.pay==='function' ? resolve() : reject(new Error('Snap Midtrans tidak tersedia.'));
+    script.onerror=()=>reject(new Error('Gagal memuat checkout Midtrans. Periksa koneksi internet.'));
+    document.head.appendChild(script);
+  });
+}
+
+/* Checkout Midtrans: pembayaran hanya dianggap sukses setelah webhook server memverifikasi status. */
 function openDemoPayment(rentalId){
   const rental = state.rentals.find(r => r.id === rentalId);
   if (!rental || rental.paymentStatus !== 'pending') return;
   const motor = state.motors.find(m => m.id === rental.motorId);
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  const overlay = document.createElement('div'); overlay.className = 'modal-overlay';
   overlay.innerHTML = `
-    <div class="modal">
-      <div class="modal-header"><h3><i class="fa-solid fa-shield-halved"></i> Pembayaran Booking</h3></div>
-      <div class="modal-body">
-        <div class="empty" style="padding:12px 0"><i class="fa-solid fa-receipt"></i><h3>${esc(motor?.name || 'Rental Motor')}</h3><p>Durasi ${rental.durationHours} jam · ${esc(rental.paymentMethod)}</p></div>
-        <div class="price-summary"><div class="price-row total"><span>Total yang harus dibayar</span><span>${rupiah(rental.totalPrice)}</span></div></div>
-        <div class="pickup-card" style="margin-top:16px"><strong>Instruksi pembayaran demo</strong><p style="margin-top:8px">Metode: ${esc(rental.paymentMethod)}. Pada aplikasi nyata, tahap ini harus terhubung ke payment gateway untuk membuat tagihan dan memverifikasi pembayaran secara otomatis.</p></div>
-        <p style="font-size:12px;color:var(--muted);margin-top:12px">Mode demo: tombol konfirmasi hanya mensimulasikan status pembayaran dan tidak memindahkan uang.</p>
-      </div>
-      <div class="modal-footer"><button class="btn btn-secondary" id="cancelDemoPayment">Batalkan pesanan</button><button class="btn btn-primary" id="confirmDemoPayment">Konfirmasi Pembayaran (Demo)</button></div>
+    <div class="modal"><div class="modal-header"><h3><i class="fa-solid fa-shield-halved"></i> Pembayaran Booking</h3><button class="modal-close" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body"><div class="empty" style="padding:12px 0"><i class="fa-solid fa-receipt"></i><h3>${esc(motor?.name || 'Rental Motor')}</h3><p>Durasi ${rental.durationHours} jam</p></div>
+        <div class="price-summary"><div class="price-row total"><span>Total pembayaran</span><span>${rupiah(rental.totalPrice)}</span></div></div>
+        <div class="pickup-card" style="margin-top:16px"><strong>Pembayaran aman melalui Midtrans</strong><p style="margin-top:8px">Jendela pembayaran akan terbuka di halaman RentGo. Status booking berubah setelah server memverifikasi notifikasi pembayaran.</p></div>
+        <p id="rgMidtransMessage" role="status" style="font-size:13px;margin-top:12px;color:var(--muted)">Pastikan Edge Functions dan secret Midtrans sudah dikonfigurasi.</p>
+      </div><div class="modal-footer"><button class="btn btn-secondary" id="cancelMidtransPayment">Batalkan pesanan</button><button class="btn btn-primary" id="startMidtransPayment"><i class="fa-solid fa-lock"></i> Bayar melalui Midtrans</button></div>
     </div>`;
   document.body.appendChild(overlay);
-  document.getElementById('cancelDemoPayment').onclick = () => {
-    state.rentals = state.rentals.filter(r => r.id !== rentalId);
-    saveState();
-    if (typeof deleteRentalFromCloud === 'function') deleteRentalFromCloud(rentalId); overlay.remove(); render(); toast('Pesanan dibatalkan.', 'info');
+  const close = () => overlay.remove();
+  overlay.querySelector('.modal-close').onclick=close;
+  overlay.querySelector('#cancelMidtransPayment').onclick = async () => {
+    if (!await showRentGoConfirm('Batalkan pesanan?', 'Pesanan yang belum dibayar akan dibatalkan.', 'Batalkan pesanan')) return;
+    state.rentals = state.rentals.filter(r => r.id !== rentalId); saveState();
+    if (typeof deleteRentalFromCloud === 'function') await deleteRentalFromCloud(rentalId);
+    close(); render(); toast('Pesanan dibatalkan.', 'info');
   };
-  document.getElementById('confirmDemoPayment').onclick = () => {
-    rental.paymentStatus = 'paid_demo';
-    rental.status = 'booked';
-    rental.paidAt = new Date().toISOString();
-    saveState();
-    if (typeof saveRentalToCloud === 'function') saveRentalToCloud(rental);
-    const buyer = state.users.find(u => u.id === rental.buyerId);
-    pushNotif(rental.sellerId, 'booking', 'Booking Baru — Dibayar (Demo)', `${buyer?.name || 'Penyewa'} memesan ${motor?.name || 'motor'} selama ${rental.durationHours} jam. Status pembayaran: simulasi demo.`, rental.id);
-    pushNotif(rental.buyerId, 'payment', 'Pembayaran Tercatat (Demo)', `Pembayaran ${rupiah(rental.totalPrice)} disimulasikan berhasil. Ini bukan transaksi uang sungguhan.`, rental.id);
-    overlay.remove(); toast('Pembayaran demo tercatat. Booking menunggu pengambilan.', 'success'); render();
+  overlay.querySelector('#startMidtransPayment').onclick = async () => {
+    const btn=overlay.querySelector('#startMidtransPayment'), msg=overlay.querySelector('#rgMidtransMessage');
+    const sb=window.rentGoSupabase;
+    if(!sb){msg.textContent='Supabase belum terhubung.';return;}
+    btn.disabled=true; msg.textContent='Membuat transaksi aman...';
+    try {
+      const {data:{session}} = await sb.auth.getSession();
+      if(!session?.access_token) throw new Error('Silakan login ulang dengan akun Supabase Auth sebelum melakukan pembayaran.');
+      const saved = await (typeof saveRentalToCloud==='function' ? saveRentalToCloud(rental) : false);
+      if(!saved) throw new Error('Pesanan belum tersimpan di Supabase. Coba lagi sebelum membayar.');
+      const {data,error}=await sb.functions.invoke('create-midtrans-payment',{body:{rental_id:String(rental.id)}});
+      if(error) throw error;
+      if(!data?.token) throw new Error(data?.error || 'Midtrans tidak mengembalikan token pembayaran.');
+      const clientKey = data.client_key;
+      if(!clientKey) throw new Error('MIDTRANS_CLIENT_KEY belum tersedia di Edge Function Secrets.');
+      const production = String(data.environment || 'sandbox').toLowerCase() === 'production';
+      const snapUrl = production ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js';
+      await loadMidtransSnap(snapUrl, clientKey);
+      msg.textContent='Transaksi dibuat. Selesaikan pembayaran pada jendela Midtrans di RentGo.';
+      window.snap.pay(data.token, {
+        onSuccess: async () => {
+          // Callback ini berjalan ketika penyewa menekan Oke pada hasil sukses Snap.
+          // Tutup modal pembayaran RentGo juga; status rental tetap ditentukan webhook server.
+          toast('Pembayaran berhasil. Memperbarui status booking…', 'success');
+          close();
+          try {
+            if (typeof loadRentGoWorkflow === 'function') await loadRentGoWorkflow();
+            if (typeof render === 'function') render();
+          } catch (refreshError) { console.warn('[RentGo payment] refresh after success', refreshError); }
+        },
+        onPending: () => { msg.textContent='Pembayaran masih menunggu penyelesaian. Kamu dapat melanjutkan dari halaman ini.'; btn.disabled=false; },
+        onError: () => { msg.textContent='Pembayaran gagal. Silakan coba lagi.'; btn.disabled=false; },
+        onClose: () => { msg.textContent='Jendela pembayaran ditutup. Pesanan tetap menunggu pembayaran.'; btn.disabled=false; }
+      });
+      btn.disabled=false;
+    } catch(e) {
+      msg.textContent=e?.message || 'Pembayaran belum dapat dimulai. Periksa konfigurasi Supabase Edge Functions dan Midtrans.';
+      btn.disabled=false;
+    }
   };
-  overlay.onclick = e => { if (e.target === overlay) toast('Selesaikan atau batalkan pembayaran terlebih dahulu.', 'warning'); };
 }
