@@ -463,3 +463,60 @@ body { overflow-x: hidden; }
 .rg-chat-badge{position:absolute;top:-7px;right:-5px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#e11d48;color:#fff;font:700 12px/22px Arial,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff}
 .user-avatar{overflow:hidden}
 .user-avatar img{display:block}
+
+
+/* RENTGO: tema gelap/terang */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0b1220;--card:#111c2e;--text:#e5edf8;--muted:#9aabc2;
+  --border:#26354b;--primary-light:#172f58;--success-light:#123524;
+  --danger-light:#451b26;--warning-light:#453516;
+  --shadow:0 2px 8px rgba(0,0,0,.24);--shadow-lg:0 12px 34px rgba(0,0,0,.35);
+}
+:root[data-theme="dark"] body{background:var(--bg);color:var(--text)}
+:root[data-theme="dark"] .header,
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .motor-card,
+:root[data-theme="dark"] .filter-tabs,
+:root[data-theme="dark"] .search-box,
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .modal-header,
+:root[data-theme="dark"] .modal-footer,
+:root[data-theme="dark"] .auth-right,
+:root[data-theme="dark"] .chat-container,
+:root[data-theme="dark"] .chat-input-area{background:var(--card);color:var(--text);border-color:var(--border)}
+:root[data-theme="dark"] .btn-secondary,
+:root[data-theme="dark"] .role-option{background:#172337;color:var(--text);border-color:var(--border)}
+:root[data-theme="dark"] .role-option.active{background:#1b3763;border-color:var(--primary)}
+:root[data-theme="dark"] .form-group input,
+:root[data-theme="dark"] .form-group select,
+:root[data-theme="dark"] .form-group textarea,
+:root[data-theme="dark"] .chat-input-area input,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea{background:#0d1727;color:var(--text);border-color:var(--border)}
+:root[data-theme="dark"] .filter-tab{color:var(--muted)}
+:root[data-theme="dark"] .filter-tab.active{color:#fff}
+:root[data-theme="dark"] .chat-bubble.other{background:#1a2940;color:var(--text)}
+:root[data-theme="dark"] .chat-empty{color:var(--muted)}
+:root[data-theme="dark"] .auth-right{background:var(--bg)}
+:root[data-theme="dark"] .btn-secondary:hover{background:#26354b}
+:root[data-theme="dark"] .status-badge{color:var(--text)}
+:root[data-theme="dark"] .empty{color:var(--muted)}
+.theme-float{position:fixed;right:20px;top:18px;z-index:1100;width:42px;height:42px;border-radius:12px;background:var(--card);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center}
+:root:not([data-theme="dark"]) .theme-float{display:none}
+:root[data-theme="dark"] .auth-right .theme-float{display:flex}
+.seller-bank-fields{padding:18px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(145deg,rgba(37,99,235,.07),rgba(14,165,233,.04));margin:18px 0}
+.bank-section-heading{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.bank-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--primary-light);color:var(--primary);font-size:18px}
+.bank-section-heading strong,.bank-section-heading small{display:block}
+.bank-section-heading strong{font-size:14px}
+.bank-section-heading small{font-size:12px;color:var(--muted);margin-top:2px}
+.bank-note{font-size:11px;color:var(--muted);line-height:1.5}
+.bank-note i{color:var(--success);margin-right:4px}
+.chat-message-meta{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:5px}
+.chat-message-meta .time{display:inline-block;margin:0}
+.chat-delete-btn{font-size:11px;padding:3px 5px;border-radius:5px;color:inherit;background:transparent;opacity:.65}
+.chat-delete-btn:hover{background:rgba(220,38,38,.15);color:#ef4444;opacity:1}
+.chat-delete-btn:disabled{opacity:.3}
+@media(max-width:650px){.seller-bank-fields{padding:14px}.theme-float{top:12px;right:12px}}

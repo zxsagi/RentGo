@@ -137,10 +137,24 @@ async function openChatThread(info){
     } else {
       msgsEl.innerHTML = msgs.map(m => {
         const self = String(m.senderId) === String(state.currentUser.id);
-        return `<div class="chat-bubble ${self?'self':'other'}">${esc(m.text)}<span class="time">${timeAgo(m.createdAt)}${self && m.read?' · ✓✓':''}</span></div>`;
+        return `<div class="chat-bubble ${self?'self':'other'}"><div class="chat-message-text">${esc(m.text)}</div><div class="chat-message-meta"><span class="time">${timeAgo(m.createdAt)}${self && m.read?' · ✓✓':''}</span>${self?`<button type="button" class="chat-delete-btn" data-delete-message="${esc(m.id)}" title="Hapus pesan" aria-label="Hapus pesan"><i class="fa-solid fa-trash-can"></i></button>`:''}</div></div>`;
       }).join('');
       msgsEl.scrollTop = msgsEl.scrollHeight;
     }
+    msgsEl.querySelectorAll('[data-delete-message]').forEach(btn => btn.onclick = async () => {
+      const messageId = btn.dataset.deleteMessage;
+      if (!confirm('Hapus pesan ini? Tindakan ini tidak dapat dibatalkan.')) return;
+      btn.disabled = true;
+      if (sb) {
+        const { error } = await sb.from('chat_messages').delete().eq('id', messageId).eq('sender_id', String(state.currentUser.id));
+        if (error) { toast('Pesan gagal dihapus: ' + error.message, 'error'); btn.disabled = false; return; }
+      } else {
+        state.chats = state.chats.filter(m => String(m.id) !== String(messageId));
+        saveState();
+      }
+      await renderMessages();
+      toast('Pesan berhasil dihapus', 'success');
+    });
     if (sb) {
       const unreadIds = msgs.filter(m => String(m.receiverId) === String(state.currentUser.id) && !m.read).map(m => m.id);
       if (unreadIds.length) {

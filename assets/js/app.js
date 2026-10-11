@@ -3,6 +3,7 @@
    RENDER
    ============================================================ */
 function render(){
+  if (typeof setupRentGoTheme === "function") setupRentGoTheme();
   const oldChatInboxButton = document.getElementById('rentgoChatInboxButton');
   if (!state.currentUser && oldChatInboxButton) oldChatInboxButton.remove();
   if (!state.currentUser) renderAuth();

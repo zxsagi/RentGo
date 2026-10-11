@@ -12,7 +12,7 @@ function renderHeader(activeTab, tabs){
         <nav class="header-nav">
           ${tabs.map(t => `<button class="nav-btn ${activeTab===t.id?'active':''}" data-tab="${t.id}"><i class="fa-solid ${t.icon}" style="margin-right:6px"></i>${t.label}</button>`).join('')}
         </nav>
-        <div class="header-actions">
+        <div class="header-actions">\n          <button class="icon-btn" id="themeToggle" title="Ganti tema" aria-label="Ganti tema"><i class="fa-solid fa-moon"></i></button>
           <button class="icon-btn" id="notifBtn" title="Notifikasi">
             <i class="fa-solid fa-bell"></i>
             ${unread > 0 ? `<span class="badge">${unread>9?'9+':unread}</span>` : ''}
