@@ -337,6 +337,370 @@ img{max-width:100%;display:block}
 .balance-item.pending .val{color:#fcd34d}
 .balance-item.available .val{color:#86efac}
 
+
+/* =========================================================
+   RENTGO — DARK MODE READABILITY FIX
+   Letakkan di BARIS PALING AKHIR file CSS.
+   Mode light tidak diubah.
+   ========================================================= */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0b1220;
+  --card: #111c2e;
+  --text: #f1f5f9;
+  --muted: #c0ccdc;
+  --border: #35445b;
+
+  --primary: #60a5fa;
+  --primary-dark: #3b82f6;
+  --primary-light: #1e3a5f;
+
+  --success: #4ade80;
+  --success-light: #143b2a;
+  --danger: #f87171;
+  --danger-light: #4a2029;
+  --warning: #fbbf24;
+  --warning-light: #453719;
+
+  --shadow: 0 2px 8px rgba(0, 0, 0, .35);
+  --shadow-lg: 0 12px 34px rgba(0, 0, 0, .5);
+}
+
+:root[data-theme="dark"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Teks umum dan elemen yang mewarisi warna */
+:root[data-theme="dark"] .main,
+:root[data-theme="dark"] .main-content,
+:root[data-theme="dark"] .page-content,
+:root[data-theme="dark"] .page-title,
+:root[data-theme="dark"] .page-title h1,
+:root[data-theme="dark"] .auth-form,
+:root[data-theme="dark"] .auth-form h2,
+:root[data-theme="dark"] .stat-info .val,
+:root[data-theme="dark"] .motor-name,
+:root[data-theme="dark"] .history-info h4,
+:root[data-theme="dark"] .notif-content .title,
+:root[data-theme="dark"] .chat-info .name,
+:root[data-theme="dark"] .review-item .name,
+:root[data-theme="dark"] .modal-header h3,
+:root[data-theme="dark"] .detail-item .val,
+:root[data-theme="dark"] .price-row,
+:root[data-theme="dark"] .form-group label {
+  color: var(--text);
+}
+
+/* Semua permukaan utama */
+:root[data-theme="dark"] .header,
+:root[data-theme="dark"] .stat-card,
+:root[data-theme="dark"] .motor-card,
+:root[data-theme="dark"] .filter-tabs,
+:root[data-theme="dark"] .search-box,
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .modal-header,
+:root[data-theme="dark"] .modal-footer,
+:root[data-theme="dark"] .auth-right,
+:root[data-theme="dark"] .empty,
+:root[data-theme="dark"] .history-item,
+:root[data-theme="dark"] .seller-motor,
+:root[data-theme="dark"] .notif-dropdown,
+:root[data-theme="dark"] .notif-header,
+:root[data-theme="dark"] .toast,
+:root[data-theme="dark"] .review-item,
+:root[data-theme="dark"] .chat-container,
+:root[data-theme="dark"] .chat-header,
+:root[data-theme="dark"] .chat-input-area {
+  background-color: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* Judul dan deskripsi sekunder */
+:root[data-theme="dark"] .text-muted,
+:root[data-theme="dark"] .page-title p,
+:root[data-theme="dark"] .auth-form .sub,
+:root[data-theme="dark"] .auth-switch,
+:root[data-theme="dark"] .user-info .role,
+:root[data-theme="dark"] .stat-info .label,
+:root[data-theme="dark"] .motor-brand,
+:root[data-theme="dark"] .motor-specs,
+:root[data-theme="dark"] .seller-tag,
+:root[data-theme="dark"] .seller-motor-info .loc,
+:root[data-theme="dark"] .history-info p,
+:root[data-theme="dark"] .history-meta .date,
+:root[data-theme="dark"] .detail-item .label,
+:root[data-theme="dark"] .detail-desc,
+:root[data-theme="dark"] .section-title,
+:root[data-theme="dark"] .notif-content .desc,
+:root[data-theme="dark"] .notif-content .time,
+:root[data-theme="dark"] .notif-empty,
+:root[data-theme="dark"] .chat-info .sub,
+:root[data-theme="dark"] .chat-empty,
+:root[data-theme="dark"] .review-item .date,
+:root[data-theme="dark"] .review-summary .count,
+:root[data-theme="dark"] .payment-opt .desc,
+:root[data-theme="dark"] .pickup-card .loc-detail,
+:root[data-theme="dark"] .bank-note,
+:root[data-theme="dark"] .bank-section-heading small {
+  color: var(--muted);
+}
+
+/* Formulir, pencarian, dan pilihan */
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] .form-group input,
+:root[data-theme="dark"] .form-group select,
+:root[data-theme="dark"] .form-group textarea,
+:root[data-theme="dark"] .search-box input,
+:root[data-theme="dark"] .chat-input-area input {
+  background: #0a1424;
+  color: #f8fafc;
+  border-color: #475569;
+  caret-color: #93c5fd;
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder,
+:root[data-theme="dark"] .search-box input::placeholder,
+:root[data-theme="dark"] .chat-input-area input::placeholder {
+  color: #a9b8cc;
+  opacity: 1;
+}
+
+:root[data-theme="dark"] select option {
+  background: #111c2e;
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] textarea:focus {
+  border-color: #60a5fa;
+  outline: 2px solid rgba(96, 165, 250, .25);
+  outline-offset: 1px;
+}
+
+/* Tombol sekunder dan pilihan */
+:root[data-theme="dark"] .btn-secondary,
+:root[data-theme="dark"] .role-option,
+:root[data-theme="dark"] .duration-opt,
+:root[data-theme="dark"] .payment-opt {
+  background: #172337;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+:root[data-theme="dark"] .btn-secondary:hover,
+:root[data-theme="dark"] .role-option:hover,
+:root[data-theme="dark"] .duration-opt:hover,
+:root[data-theme="dark"] .payment-opt:hover {
+  background: #263750;
+  border-color: #60a5fa;
+}
+
+:root[data-theme="dark"] .role-option.active,
+:root[data-theme="dark"] .duration-opt.active,
+:root[data-theme="dark"] .payment-opt.active,
+:root[data-theme="dark"] .filter-tab.active {
+  background: #1e40af;
+  color: #fff;
+  border-color: #60a5fa;
+}
+
+:root[data-theme="dark"] .btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .btn-success {
+  background: #15803d;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .btn-danger {
+  background: #b91c1c;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .btn-warning {
+  background: #92400e;
+  color: #fff;
+}
+
+/* Navigasi dan ikon */
+:root[data-theme="dark"] .nav-btn,
+:root[data-theme="dark"] .icon-btn {
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .nav-btn:hover,
+:root[data-theme="dark"] .icon-btn:hover {
+  background: #263750;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .nav-btn.active {
+  background: #1e3a5f;
+  color: #bfdbfe;
+}
+
+/* Detail motor, ringkasan harga, dan pickup */
+:root[data-theme="dark"] .detail-item,
+:root[data-theme="dark"] .price-summary,
+:root[data-theme="dark"] .photo-upload {
+  background: #172337;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .pickup-card {
+  background: linear-gradient(135deg, #142b49, #172f58);
+  color: #f1f5f9;
+  border-color: #315784;
+}
+
+:root[data-theme="dark"] .pickup-card .loc-name,
+:root[data-theme="dark"] .pickup-card .loc-detail {
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .motor-footer {
+  border-color: var(--border);
+}
+
+/* Status motor */
+:root[data-theme="dark"] .status-badge {
+  background: #172337;
+  color: #f8fafc;
+  border: 1px solid #475569;
+}
+
+:root[data-theme="dark"] .status-badge.available {
+  color: #86efac;
+}
+
+:root[data-theme="dark"] .status-badge.rented {
+  color: #fca5a5;
+}
+
+:root[data-theme="dark"] .rating-badge {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+/* Chat */
+:root[data-theme="dark"] .chat-messages {
+  background: #0a1424;
+}
+
+:root[data-theme="dark"] .chat-bubble.other {
+  background: #263750;
+  color: #f8fafc;
+  border: 1px solid #3b4d66;
+}
+
+:root[data-theme="dark"] .chat-bubble.self {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .chat-input-area {
+  border-top-color: var(--border);
+}
+
+:root[data-theme="dark"] .chat-delete-btn,
+:root[data-theme="dark"] .chat-more-btn {
+  color: #f1f5f9;
+}
+
+/* Notifikasi */
+:root[data-theme="dark"] .notif-item {
+  background: #111c2e;
+  color: #f1f5f9;
+  border-bottom-color: var(--border);
+}
+
+:root[data-theme="dark"] .notif-item:hover {
+  background: #263750;
+}
+
+:root[data-theme="dark"] .notif-item.unread {
+  background: #172f58;
+}
+
+:root[data-theme="dark"] .notif-item.unread:hover {
+  background: #1e3a5f;
+}
+
+/* Modal, popup, dropdown */
+:root[data-theme="dark"] .modal-header,
+:root[data-theme="dark"] .notif-header {
+  background: #111c2e;
+}
+
+:root[data-theme="dark"] .modal-close {
+  background: #263750;
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .modal-close:hover {
+  background: #4a2029;
+  color: #fca5a5;
+}
+
+:root[data-theme="dark"] .chat-message-menu {
+  background: #172337;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+/* Foto profil dan unggah foto */
+:root[data-theme="dark"] .photo-upload:hover {
+  background: #1e3a5f;
+}
+
+:root[data-theme="dark"] .photo-upload .text {
+  color: #f1f5f9;
+}
+
+/* Toast */
+:root[data-theme="dark"] .toast {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .toast .msg {
+  color: #f1f5f9;
+}
+
+/* Tautan dan fokus keyboard */
+:root[data-theme="dark"] a:not(.btn) {
+  text-underline-offset: 3px;
+}
+
+:root[data-theme="dark"] button:focus-visible,
+:root[data-theme="dark"] a:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+/* Tema gelap tetap menghormati teks putih pada banner gelap */
+:root[data-theme="dark"] .active-rental,
+:root[data-theme="dark"] .balance-card,
+:root[data-theme="dark"] .auth-left {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .active-rental p,
+:root[data-theme="dark"] .balance-card .label {
+  color: #e2e8f0;
+}
+
+
 /* RESPONSIVE */
 @media (max-width:768px){
   .auth-wrap{grid-template-columns:1fr}
