@@ -520,3 +520,27 @@ body { overflow-x: hidden; }
 .chat-delete-btn:hover{background:rgba(220,38,38,.15);color:#ef4444;opacity:1}
 .chat-delete-btn:disabled{opacity:.3}
 @media(max-width:650px){.seller-bank-fields{padding:14px}.theme-float{top:12px;right:12px}}
+
+/* Perbaikan tema global: semua permukaan utama mengikuti variabel tema */
+:root{color-scheme:light;--bg:#f8fafc;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--shadow:0 2px 8px rgba(15,23,42,.08);--shadow-lg:0 12px 34px rgba(15,23,42,.12)}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0b1220;--card:#111c2e;--text:#e5edf8;--muted:#9aabc2;--border:#26354b;--primary-light:#172f58;--success-light:#123524;--danger-light:#451b26;--warning-light:#453516;--shadow:0 2px 8px rgba(0,0,0,.24);--shadow-lg:0 12px 34px rgba(0,0,0,.35)}
+:root[data-theme="dark"] body,:root[data-theme="dark"] .auth-right,:root[data-theme="dark"] .page-content,:root[data-theme="dark"] .main-content{background:var(--bg);color:var(--text)}
+:root[data-theme="dark"] .header,:root[data-theme="dark"] .stat-card,:root[data-theme="dark"] .motor-card,:root[data-theme="dark"] .filter-tabs,:root[data-theme="dark"] .search-box,:root[data-theme="dark"] .modal,:root[data-theme="dark"] .modal-header,:root[data-theme="dark"] .modal-footer,:root[data-theme="dark"] .chat-container,:root[data-theme="dark"] .chat-input-area,:root[data-theme="dark"] .chat-messages{background:var(--card);color:var(--text);border-color:var(--border)}
+:root[data-theme="dark"] .chat-messages{background:#0b1524}
+:root[data-theme="dark"] .chat-bubble.other,:root[data-theme="dark"] .notification-item,:root[data-theme="dark"] .history-item,:root[data-theme="dark"] .review-card{background:#1a2940;color:var(--text);border-color:var(--border)}
+:root[data-theme="dark"] .header .nav-btn,:root[data-theme="dark"] .icon-btn,:root[data-theme="dark"] .user-info .role{color:var(--text)}
+:root[data-theme="dark"] .btn-secondary,:root[data-theme="dark"] .role-option{background:#172337;color:var(--text);border-color:var(--border)}
+:root[data-theme="dark"] .form-group input,:root[data-theme="dark"] .form-group select,:root[data-theme="dark"] .form-group textarea,:root[data-theme="dark"] input,:root[data-theme="dark"] select,:root[data-theme="dark"] textarea{background:#0d1727;color:var(--text);border-color:var(--border)}
+.theme-float{display:flex;position:fixed;right:20px;top:18px;z-index:1100;width:42px;height:42px;border-radius:12px;background:var(--card);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow);align-items:center;justify-content:center;cursor:pointer}
+:root[data-theme="light"] .theme-float{display:flex}
+.chat-message-actions{position:relative;display:inline-flex;align-items:center}
+.chat-more-btn{width:25px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.14);color:inherit;cursor:pointer;opacity:.82}
+.chat-more-btn:hover{background:rgba(0,0,0,.12);opacity:1}
+.chat-message-menu{position:absolute;z-index:20;right:0;bottom:calc(100% + 6px);min-width:158px;padding:5px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-lg)}
+.chat-message-menu[hidden]{display:none!important}
+.chat-menu-delete{width:100%;display:flex;align-items:center;gap:9px;padding:10px 11px;border-radius:7px;text-align:left;background:transparent;color:var(--danger);font-size:13px;cursor:pointer}
+.chat-menu-delete:hover{background:var(--danger-light)}
+.chat-delete-confirm{max-width:420px;width:calc(100% - 32px)}
+.chat-delete-confirm .modal-body p{color:var(--muted);font-size:14px;line-height:1.6}
+.chat-delete-confirm .modal-footer{gap:8px}
+.chat-delete-confirm-btn{min-width:135px}

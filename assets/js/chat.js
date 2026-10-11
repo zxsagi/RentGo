@@ -137,23 +137,43 @@ async function openChatThread(info){
     } else {
       msgsEl.innerHTML = msgs.map(m => {
         const self = String(m.senderId) === String(state.currentUser.id);
-        return `<div class="chat-bubble ${self?'self':'other'}"><div class="chat-message-text">${esc(m.text)}</div><div class="chat-message-meta"><span class="time">${timeAgo(m.createdAt)}${self && m.read?' · ✓✓':''}</span>${self?`<button type="button" class="chat-delete-btn" data-delete-message="${esc(m.id)}" title="Hapus pesan" aria-label="Hapus pesan"><i class="fa-solid fa-trash-can"></i></button>`:''}</div></div>`;
+        return `<div class="chat-bubble ${self?'self':'other'}"><div class="chat-message-text">${esc(m.text)}</div><div class="chat-message-meta"><span class="time">${timeAgo(m.createdAt)}${self && m.read?' · ✓✓':''}</span>${self?`<div class="chat-message-actions"><button type="button" class="chat-more-btn" data-message-menu="${esc(m.id)}" title="Opsi pesan" aria-label="Opsi pesan"><i class="fa-solid fa-ellipsis-vertical"></i></button><div class="chat-message-menu" data-menu-for="${esc(m.id)}" hidden><button type="button" class="chat-menu-delete" data-delete-message="${esc(m.id)}"><i class="fa-regular fa-trash-can"></i> Hapus pesan</button></div></div>`:''}</div></div>`;
       }).join('');
       msgsEl.scrollTop = msgsEl.scrollHeight;
     }
+    msgsEl.querySelectorAll('[data-message-menu]').forEach(btn => btn.onclick = () => {
+      const id = btn.dataset.messageMenu;
+      const menu = msgsEl.querySelector(`[data-menu-for="${CSS.escape(id)}"]`);
+      msgsEl.querySelectorAll('.chat-message-menu').forEach(item => { if (item !== menu) item.hidden = true; });
+      if (menu) menu.hidden = !menu.hidden;
+    });
     msgsEl.querySelectorAll('[data-delete-message]').forEach(btn => btn.onclick = async () => {
       const messageId = btn.dataset.deleteMessage;
-      if (!confirm('Hapus pesan ini? Tindakan ini tidak dapat dibatalkan.')) return;
-      btn.disabled = true;
-      if (sb) {
-        const { error } = await sb.from('chat_messages').delete().eq('id', messageId).eq('sender_id', String(state.currentUser.id));
-        if (error) { toast('Pesan gagal dihapus: ' + error.message, 'error'); btn.disabled = false; return; }
-      } else {
-        state.chats = state.chats.filter(m => String(m.id) !== String(messageId));
-        saveState();
+      const message = msgs.find(m => String(m.id) === String(messageId));
+      if (!message || String(message.senderId) !== String(state.currentUser.id)) {
+        toast('Kamu hanya dapat menghapus pesan yang kamu kirim.', 'error'); return;
       }
-      await renderMessages();
-      toast('Pesan berhasil dihapus', 'success');
+      const confirmOverlay = document.createElement('div');
+      confirmOverlay.className = 'modal-overlay chat-delete-confirm-overlay';
+      confirmOverlay.innerHTML = `<div class="modal chat-delete-confirm" role="dialog" aria-modal="true" aria-labelledby="deleteMessageTitle"><div class="modal-header"><h3 id="deleteMessageTitle"><i class="fa-regular fa-trash-can" style="color:var(--danger);margin-right:8px"></i>Hapus pesan?</h3><button type="button" class="modal-close" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div><div class="modal-body"><p>Pesan ini akan dihapus dari percakapan. Tindakan ini tidak dapat dibatalkan.</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary chat-delete-cancel">Batal</button><button type="button" class="btn btn-danger chat-delete-confirm-btn"><i class="fa-regular fa-trash-can"></i> Hapus pesan</button></div></div>`;
+      document.body.appendChild(confirmOverlay);
+      const dismiss = () => confirmOverlay.remove();
+      confirmOverlay.querySelectorAll('.modal-close,.chat-delete-cancel').forEach(el => el.onclick = dismiss);
+      confirmOverlay.onclick = e => { if (e.target === confirmOverlay) dismiss(); };
+      confirmOverlay.querySelector('.chat-delete-confirm-btn').onclick = async () => {
+        const confirmBtn = confirmOverlay.querySelector('.chat-delete-confirm-btn');
+        confirmBtn.disabled = true; confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghapus...';
+        if (sb) {
+          const { error, count } = await sb.from('chat_messages').delete({count:'exact'}).eq('id', messageId).eq('sender_id', String(state.currentUser.id));
+          if (error || count === 0) {
+            toast('Pesan gagal dihapus. Periksa kebijakan DELETE chat_messages di Supabase.', 'error');
+            confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fa-regular fa-trash-can"></i> Coba lagi'; return;
+          }
+        } else {
+          state.chats = state.chats.filter(m => String(m.id) !== String(messageId)); saveState();
+        }
+        dismiss(); await renderMessages(); toast('Pesan berhasil dihapus', 'success');
+      };
     });
     if (sb) {
       const unreadIds = msgs.filter(m => String(m.receiverId) === String(state.currentUser.id) && !m.read).map(m => m.id);
